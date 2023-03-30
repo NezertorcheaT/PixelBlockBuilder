@@ -1,0 +1,15 @@
+{
+  "pbb.box": "box.png",
+  "pbb.circle": "circle.png",
+  "pbb.cone": "circle.png",
+  "pbb.pyramid": "pyramid.png",
+  "pbb.ramp_z_0": "rampZ0.png",
+  "pbb.ramp_z_90": "rampZ90.png",
+  "pbb.ramp_z_180": "rampZ180.png",
+  "pbb.ramp_z_270": "rampZ270.png",
+  "pbb.ramp_up_z_0": "urampZ0.png",
+  "pbb.ramp_up_z_90": "urampZ90.png",
+  "pbb.ramp_up_z_180": "urampZ180.png",
+  "pbb.ramp_up_z_270": "urampZ270.png",
+  "pbb.xyz": "XrYgZb.png"
+}
