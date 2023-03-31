@@ -46,13 +46,22 @@ class BlocksMatrix:
                 ff = np.vectorize(Block.get_path_from_id)(ff)
                 self.blocksMatrix = ff
 
+    def topbn(self):
+        with open(f'images/ids.json', "r") as fh:
+            ff: dict = json.load(fh)
+            ff: dict = dict(zip(ff.values(), ff.keys()))
+            st: str = f'{self.maxx}\n{self.maxy}\n{self.maxz}\n'
+            for z in np.arange(self.maxz):
+                for x in np.arange(self.maxx):
+                    for y in np.arange(self.maxy):
+                        st += ff.get(self.blocksMatrix[x, y, z].replace('images/',''), "null")
+                        st += '\n'
+            return st[:-1]
+
     @staticmethod
     def random_matrix(size: "tuple[int,int,int] | list[int,int,int]"):
         with open(f'images/ids.json', "r") as fh:
             ff: dict = json.load(fh)
-            print(ff)
-            print(list(ff.values()))
-            print(list(ff.values())[randint(0, len(ff.values()) - 1)])
             bm = BlocksMatrix(size=size)
             print(bm.blocksMatrix.dtype)
             for z in np.arange(bm.maxz):
@@ -93,13 +102,9 @@ class BlocksMatrix:
                     neww.paste(topaste, (int(pos.x), int(pos.y)))
 
                     im.alpha_composite(neww)
-                    im.save(f"render/IMAGE_{pcs}_({x},{y},{z}).png")
                     pcs += 1
-        # im.show()
+        return im
 
-
-print(BlocksMatrix.random_matrix((5, 5, 5)).render())
-print(Block.get_path_from_id("pbb.ramp_up_z_270"))
-print(Block("pb.ramp_up_z_270").ID)
-
-x, y, z = 1, 0, 0
+# print(BlocksMatrix("Pixel Block by NezertorcheaT.pbn").render())
+# print(Block.get_path_from_id("pbb.ramp_up_z_270"))
+# print(Block("pb.ramp_up_z_270").ID)
