@@ -1,16 +1,66 @@
 {
-  "null": "",
-  "pb.box": "box.png",
-  "pb.circle": "circle.png",
-  "pb.cone": "cone.png",
-  "pb.pyramid": "pyramid.png",
-  "pb.ramp_z_0": "rampZ0.png",
-  "pb.ramp_z_90": "rampZ90.png",
-  "pb.ramp_z_180": "rampZ180.png",
-  "pb.ramp_z_270": "rampZ270.png",
-  "pb.ramp_up_z_0": "urampZ0.png",
-  "pb.ramp_up_z_90": "urampZ90.png",
-  "pb.ramp_up_z_180": "urampZ180.png",
-  "pb.ramp_up_z_270": "urampZ270.png",
-  "pb.xyz": "XrYgZb.png"
+  "null": {
+    "data": "",
+    "transmission": 1
+  },
+  "pb.box": {
+    "data": "images/box.png",
+    "transmission": 0
+  },
+  "pb.circle": {
+    "data": "images/circle.png",
+    "transmission": 0.95
+  },
+  "pb.cone": {
+    "data": "images/cone.png",
+    "transmission": 0.3
+  },
+  "pb.pyramid": {
+    "data": "images/pyramid.png",
+    "transmission": 0.4
+  },
+  "pb.ramp_z_0": {
+    "data": "images/rampZ0.png",
+    "transmission": 0.5
+  },
+  "pb.ramp_z_90": {
+    "data": "images/rampZ90.png",
+    "transmission": 0.5
+  },
+  "pb.ramp_z_180": {
+    "data": "images/rampZ180.png",
+    "transmission": 0.5
+  },
+  "pb.ramp_z_270": {
+    "data": "images/rampZ270.png",
+    "transmission": 0.5
+  },
+  "pb.ramp_up_z_0": {
+    "data": "images/urampZ0.png",
+    "transmission": 0.5
+  },
+  "pb.ramp_up_z_90": {
+    "data": "images/urampZ90.png",
+    "transmission": 0.5
+  },
+  "pb.ramp_up_z_180": {
+    "data": "images/urampZ180.png",
+    "transmission": 0.5
+  },
+  "pb.ramp_up_z_270": {
+    "data": "images/urampZ270.png",
+    "transmission": 0.5
+  },
+  "pb.xyz": {
+    "data": "images/XrYgZb.png",
+    "transmission": 1
+  },
+  "pb.cylinder": {
+    "data": "images/cylinder.png",
+    "transmission": 0.5
+  },
+  "pb.ball": {
+    "data": "images/ball.png",
+    "transmission": 0.5
+  }
 }
