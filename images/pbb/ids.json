@@ -79,7 +79,7 @@
   "pbb.xyz": {
     "data": "XrYgZb.png",
     "transmission": 1,
-    "hidden": false
+    "hidden": true
   },
   "pbb.cylinder": {
     "data": "cylinder.png",
@@ -94,6 +94,6 @@
   "selector": {
     "data": "select.png",
     "transmission": 1,
-    "hidden": false
+    "hidden": true
   }
 }
