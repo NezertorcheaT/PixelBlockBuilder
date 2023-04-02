@@ -1,66 +1,99 @@
 {
   "null": {
     "data": "",
-    "transmission": 1
+    "transmission": 1,
+    "hidden": false
   },
   "pbb.box": {
     "data": "box.png",
-    "transmission": 0
+    "transmission": 0,
+    "hidden": false
   },
   "pbb.circle": {
     "data": "circle.png",
-    "transmission": 0.95
+    "transmission": 0.95,
+    "hidden": false
   },
   "pbb.cone": {
     "data": "cone.png",
-    "transmission": 0.3
+    "transmission": 0.7,
+    "hidden": false
   },
   "pbb.pyramid": {
     "data": "pyramid.png",
-    "transmission": 0.4
+    "transmission": 0.6,
+    "hidden": false
+  },
+  "pbb.ramp": {
+    "data": "null.png",
+    "transmission": 0.5,
+    "hidden": true,
+    "z_spin": [
+      "pbb.ramp_z_0",
+      "pbb.ramp_z_90",
+      "pbb.ramp_z_180",
+      "pbb.ramp_z_270",
+      "pbb.ramp_z_0"
+    ]
   },
   "pbb.ramp_z_0": {
     "data": "rampZ0.png",
-    "transmission": 0.5
+    "transmission": 0.5,
+    "hidden": false
   },
   "pbb.ramp_z_90": {
     "data": "rampZ90.png",
-    "transmission": 0.5
+    "transmission": 0.5,
+    "hidden": false
   },
   "pbb.ramp_z_180": {
     "data": "rampZ180.png",
-    "transmission": 0.5
+    "transmission": 0.5,
+    "hidden": false
   },
   "pbb.ramp_z_270": {
     "data": "rampZ270.png",
-    "transmission": 0.5
+    "transmission": 0.5,
+    "hidden": false
   },
   "pbb.ramp_up_z_0": {
     "data": "urampZ0.png",
-    "transmission": 0.5
+    "transmission": 0.5,
+    "hidden": false
   },
   "pbb.ramp_up_z_90": {
     "data": "urampZ90.png",
-    "transmission": 0.5
+    "transmission": 0.5,
+    "hidden": false
   },
   "pbb.ramp_up_z_180": {
     "data": "urampZ180.png",
-    "transmission": 0.5
+    "transmission": 0.5,
+    "hidden": false
   },
   "pbb.ramp_up_z_270": {
     "data": "urampZ270.png",
-    "transmission": 0.5
+    "transmission": 0.5,
+    "hidden": false
   },
   "pbb.xyz": {
     "data": "XrYgZb.png",
-    "transmission": 1
+    "transmission": 1,
+    "hidden": false
   },
   "pbb.cylinder": {
     "data": "cylinder.png",
-    "transmission": 0.5
+    "transmission": 0.5,
+    "hidden": false
   },
   "pbb.ball": {
     "data": "ball.png",
-    "transmission": 0.5
+    "transmission": 0.5,
+    "hidden": false
+  },
+  "selector": {
+    "data": "select.png",
+    "transmission": 1,
+    "hidden": false
   }
 }

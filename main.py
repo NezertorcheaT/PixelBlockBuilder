@@ -19,6 +19,7 @@ class IDHandler:
         self.folders = next(os.walk(self.path))[1]
         self.full = {}
         self.all_ids = []
+        self.all_ids_to_ui = []
         self.all_values = []
         self.all_datas = []
 
@@ -28,6 +29,9 @@ class IDHandler:
                 self.full.update(this_full)
                 this_ids = list(this_full.keys())
                 self.all_ids += this_ids
+                for j in this_full:
+                    if this_full[j]['hidden'] is False:
+                        self.all_ids_to_ui += [j]
                 this_values = list(self.full.values())
                 self.all_values += this_values
                 self.all_datas += list(
@@ -51,7 +55,7 @@ class Block:
     @staticmethod
     def get_param_from_id(ID: str, param: str = "data") -> Any:
         l = idsHandler.full.get(ID, None)
-        return ' ' if l is None else l.get(param)
+        return '' if l is None else l.get(param)
 
     @staticmethod
     def matrix_pos_to_image_pos(pos: tuple[int, int, int]) -> tuple[int, int]:
@@ -103,6 +107,7 @@ class BlocksMatrix:
                 ff = np.array(ff[1:], np.dtype("<U256"))
                 ff = ff.reshape((self.maxx, self.maxy, self.maxz))
                 self.blocksMatrix = ff
+        self.size = (self.maxx, self.maxy, self.maxz)
 
     def topbn(self):
         st: str = f'{self.maxx},{self.maxy},{self.maxz}\n'
@@ -134,44 +139,22 @@ class BlocksMatrix:
 
     def get_brightness(self, pos: tuple[int, int, int]) -> float:
         x, y, z = pos
-        toz = z + 1
+
+        if z == self.maxz - 1:
+            return 1
 
         for i in np.arange(z + 1, self.maxz, 1):
+            if i == self.maxz - 1:
+                return 1
             if self.blocksMatrix[
                 clamp(x, -self.maxx + 1, self.maxx - 1),
                 clamp(y, -self.maxy + 1, self.maxy - 1),
                 clamp(i, -self.maxz + 1, self.maxz - 1)
-            ] != 'null':
-                toz = i
-                break
-
-        br = float(Block.get_param_from_id(self.blocksMatrix[
-                                               clamp(x, -self.maxx + 1, self.maxx - 1),
-                                               clamp(y, -self.maxy + 1, self.maxy - 1),
-                                               clamp(toz, -self.maxz + 1, self.maxz - 1)
-                                           ], "transmission")) * 3
-        br += float(Block.get_param_from_id(self.blocksMatrix[
-                                                clamp(x, -self.maxx + 1, self.maxx - 1),
-                                                clamp(y + 1, -self.maxx + 1, self.maxy - 1),
-                                                clamp(z, -self.maxz + 1, self.maxz - 1)
-                                            ], "transmission"))
-        br += float(Block.get_param_from_id(self.blocksMatrix[
-                                                clamp(x, -self.maxx + 1, self.maxx - 1),
-                                                clamp(y - 1, -self.maxy + 1, self.maxy - 1),
-                                                clamp(z, -self.maxz + 1, self.maxz - 1)
-                                            ], "transmission"))
-        br += float(Block.get_param_from_id(self.blocksMatrix[
-                                                clamp(x + 1, -self.maxx + 1, self.maxx - 1),
-                                                clamp(y, -self.maxy + 1, self.maxy - 1),
-                                                clamp(z, -self.maxz + 1, self.maxz - 1)
-                                            ], "transmission"))
-        br += float(Block.get_param_from_id(self.blocksMatrix[
-                                                clamp(x - 1, -self.maxx + 1, self.maxx - 1),
-                                                clamp(y, -self.maxy + 1, self.maxy - 1),
-                                                clamp(z, -self.maxz + 1, self.maxz - 1)
-                                            ], "transmission"))
-        br = br / 8.0
-        return br
+            ] == 'null':
+                return 1
+            else:
+                return self.get_brightness((x, y, i)) / 2
+        return 0
 
     def get_image_size(self) -> tuple[int, int]:
 

@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QLabel, QComboBox, QSpinBox, QHBoxLayout, QSizePolicy, QPushButton, QFileDialog, QDialog, QDialogButtonBox,
+    QCheckBox,
 )
 
 import main as PBB
@@ -65,24 +66,30 @@ class Vec3Entry(QLabel):
 class MainWindow(QMainWindow):
     def update_image(self):
         bim = self.blocksMatrix.render()
-        im = ImageQt(bim)
-        self.rendered_image = QPixmap.fromImage(im)
-        self.render_label.setMinimumSize(
-            bim.size[0] * 2,
-            bim.size[1] * 2
-        )
-
         self.setMinimumSize(
             bim.size[0] * 2 + 50,
-            bim.size[1] * 2 + 187
+            bim.size[1] * 2 + 187 + 46
         )
-        self.render_label.setPixmap(self.rendered_image)
 
         self.position_to_place.setMaximum(
             (self.blocksMatrix.maxx - 1, self.blocksMatrix.maxy - 1, self.blocksMatrix.maxz - 1))
 
         self.size_label.setText(
             f"Size: ({self.blocksMatrix.maxx}, {self.blocksMatrix.maxy}, {self.blocksMatrix.maxz})")
+
+        self.axis_matrix = PBB.BlocksMatrix("", self.blocksMatrix.size)
+        self.axis_matrix.place_id("selector", self.position_to_place.get())
+
+        if self.show_cursor.isChecked():
+            bim.alpha_composite(self.axis_matrix.render())
+
+        im = ImageQt(bim)
+        self.rendered_image = QPixmap.fromImage(im)
+        self.render_label.setMinimumSize(
+            bim.size[0] * 2,
+            bim.size[1] * 2
+        )
+        self.render_label.setPixmap(self.rendered_image)
 
     def place_block(self):
         self.blocksMatrix.place_id(self.id_selector.currentText(), self.position_to_place.get())
@@ -130,7 +137,6 @@ class MainWindow(QMainWindow):
 
         self.rendered_image: QPixmap = QPixmap()
         self.setWindowTitle("Pixel Block Builder by NezertorcheaT")
-        self.setMinimumSize(200, 500)
 
         layout = QVBoxLayout()
 
@@ -140,6 +146,8 @@ class MainWindow(QMainWindow):
         self.blocksMatrix.place_id("pbb.box", (0, 1, 0))
         self.blocksMatrix.place_id("pbb.box", (0, 0, 1))
 
+        self.axis_matrix = PBB.BlocksMatrix("", self.blocksMatrix.size)
+
         self.render_label = QLabel()
         self.render_label.setPixmap(self.rendered_image)
         # self.render_label.setStyleSheet("border: 2px solid black;")
@@ -147,12 +155,15 @@ class MainWindow(QMainWindow):
         self.render_label.setScaledContents(True)
 
         self.id_selector = QComboBox()
-        self.id_selector.addItems(PBB.idsHandler.all_ids)
+        self.id_selector.addItems(PBB.idsHandler.all_ids_to_ui)
         self.id_selector.setStyleSheet(f"QWidget {'{'}{style}{'}'}")
 
         self.position_to_place = Vec3Entry()
         self.position_to_place.setMaximum(
             (self.blocksMatrix.maxx - 1, self.blocksMatrix.maxy - 1, self.blocksMatrix.maxz - 1))
+        self.position_to_place.XEntry.valueChanged.connect(self.update_image)
+        self.position_to_place.YEntry.valueChanged.connect(self.update_image)
+        self.position_to_place.ZEntry.valueChanged.connect(self.update_image)
 
         self.place_button = QPushButton()
         self.place_button.setText("Place")
@@ -180,19 +191,32 @@ class MainWindow(QMainWindow):
         self.new_button.clicked.connect(self.new_matrix)
         self.new_button.clicked.connect(self.update_image)
 
+        params_layout = QHBoxLayout()
+        params_Widget = QWidget()
+        params_Widget.setLayout(params_layout)
+        print(params_Widget.minimumSize().height())
+        params_Widget.setMaximumSize(1000000, 35)
+
         self.size_label = QLabel()
         self.size_label.setStyleSheet(f"qproperty-alignment: {int(Qt.AlignmentFlag.AlignLeft)};")
-        self.size_label.setMaximumSize(1000000,13)
+        self.size_label.setMaximumSize(1000000, 13)
+
+        self.show_cursor = QCheckBox()
+        self.show_cursor.setText("Show cursor")
+        self.show_cursor.toggled.connect(self.update_image)
 
         openSaveNewWidget = QWidget()
         openSaveNewWidget.setLayout(openSaveNewlayout)
-        openSaveNewWidget.setFixedSize(200, 50)
+        openSaveNewWidget.setFixedSize(200, 40)
         openSaveNewlayout.addWidget(self.save_button)
         openSaveNewlayout.addWidget(self.open_button)
         openSaveNewlayout.addWidget(self.new_button)
 
+        params_layout.addWidget(self.size_label)
+        params_layout.addWidget(self.show_cursor)
+
         layout.addWidget(openSaveNewWidget)
-        layout.addWidget(self.size_label)
+        layout.addWidget(params_Widget)
         layout.addWidget(self.render_label)
         layout.addWidget(self.id_selector)
         layout.addWidget(self.place_button)
