@@ -8,14 +8,40 @@ import glm
 import numpy as np
 from PIL import Image, ImageEnhance
 
-all_ids = []
-with open(f'{os.path.dirname(__file__)}/images/ids.json', "r") as fh:
-    all_ids = sorted(tuple(json.load(fh).keys()))
-print(f'{os.path.dirname(__file__)}\\images\\ids.json')
-
 
 def clamp(num: 'int|float', min_value: 'int|float', max_value: 'int|float'):
     return max(min(num, max_value), min_value)
+
+
+class IDHandler:
+    def __init__(self):
+        self.path = f'{os.path.dirname(__file__)}\\images'
+        self.folders = next(os.walk(self.path))[1]
+        self.full = {}
+        self.all_ids = []
+        self.all_values = []
+        self.all_datas = []
+
+        for i in self.folders:
+            with open(f'{self.path}\\{i}\\ids.json', "r") as fh:
+                this_full = json.load(fh)
+                self.full.update(this_full)
+                this_ids = list(this_full.keys())
+                self.all_ids += this_ids
+                this_values = list(self.full.values())
+                self.all_values += this_values
+                self.all_datas += list(
+                    (f'{self.path}\\{i}\\{this_full[j].get("data", "")}' if this_full[j].get("data", "") != '' else '')
+                    for j in this_full)
+        j = 0
+        for i in self.full:
+            self.full[i]["data"] = self.all_datas[j]
+            j += 1
+        self.dataToId = dict(zip((i.get("data", "") for i in self.all_values), self.all_ids))
+        print(self.all_ids)
+
+
+idsHandler = IDHandler()
 
 
 class Block:
@@ -24,15 +50,8 @@ class Block:
 
     @staticmethod
     def get_param_from_id(ID: str, param: str = "data") -> Any:
-        with open(f'{os.path.dirname(__file__)}\\images\\ids.json', "r") as fh:
-            l = json.load(fh).get(ID, None)
-            if l is None:
-                return ""
-            else:
-                if param == 'data':
-                    return f'{os.path.dirname(__file__)}\\images\\' + l.get(param)
-                else:
-                    return l.get(param)
+        l = idsHandler.full.get(ID, None)
+        return ' ' if l is None else l.get(param)
 
     @staticmethod
     def matrix_pos_to_image_pos(pos: tuple[int, int, int]) -> tuple[int, int]:
@@ -86,40 +105,31 @@ class BlocksMatrix:
                 self.blocksMatrix = ff
 
     def topbn(self):
-        with open(f'{os.path.dirname(__file__)}/images/ids.json', "r") as fh:
-            ff: dict = json.load(fh)
-            ff: dict = dict(zip((i.get("data", "") for i in ff.values()), ff.keys()))
-            st: str = f'{self.maxx},{self.maxy},{self.maxz}\n'
-            for x in np.arange(self.maxx):
-                for y in np.arange(self.maxy):
-                    for z in np.arange(self.maxz):
-                        st += self.blocksMatrix[x, y, z]
-                        st += '\n'
-            return st[:-1]
+        st: str = f'{self.maxx},{self.maxy},{self.maxz}\n'
+        for x in np.arange(self.maxx):
+            for y in np.arange(self.maxy):
+                for z in np.arange(self.maxz):
+                    st += f'{self.blocksMatrix[x, y, z]}\n'
+        return st[:-1]
 
     @staticmethod
     def random_matrix(size: "tuple[int,int,int] | list[int,int,int]"):
-        with open(f'images/ids.json', "r") as fh:
-            ff: dict = json.load(fh)
-            bm = BlocksMatrix(size=size)
-            print(bm.blocksMatrix.dtype)
-            for z in np.arange(bm.maxz):
-                for x in np.arange(bm.maxx):
-                    for y in np.arange(bm.maxy):
-                        n = list(ff.values())[randint(0, len(ff.values()) - 1)]
-                        if n != "":
-                            n = f"images/{n}"
-                        bm.blocksMatrix[x, y, z] = n
-                        print(bm.blocksMatrix[x, y, z])
-            print(bm.blocksMatrix)
-            return bm
+        bm = BlocksMatrix(size=size)
+        for z in np.arange(bm.maxz):
+            for x in np.arange(bm.maxx):
+                for y in np.arange(bm.maxy):
+                    n = list(idsHandler.full.values())[randint(0, len(idsHandler.full.values()) - 1)]
+                    if n != "":
+                        n = f"images\\{n}"
+                    bm.blocksMatrix[x, y, z] = n
+        return bm
 
     def place(self, block: Block, pos: tuple[int, int, int]):
-        if block.ID in all_ids:
+        if block.ID in idsHandler.all_ids:
             self.blocksMatrix[pos] = Block.get_param_from_id(block.ID)
 
     def place_id(self, ID: str, pos: tuple[int, int, int]):
-        if ID in all_ids:
+        if ID in idsHandler.all_ids:
             self.blocksMatrix[pos] = ID
 
     def get_brightness(self, pos: tuple[int, int, int]) -> float:

@@ -1,4 +1,5 @@
 from PIL.ImageQt import ImageQt
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
@@ -34,10 +35,11 @@ class Vec3Entry(QLabel):
         lay.addWidget(self.YEntry)
         lay.addWidget(self.ZEntry)
 
-        self.setFixedSize(200, 40)
+        # self.setFixedSize(200, 40)
+        self.setMinimumSize(200, 40)
 
         self.setSizePolicy(
-            QSizePolicy.Policy.Fixed,
+            QSizePolicy.Policy.MinimumExpanding,
             QSizePolicy.Policy.Fixed
         )
 
@@ -78,6 +80,9 @@ class MainWindow(QMainWindow):
 
         self.position_to_place.setMaximum(
             (self.blocksMatrix.maxx - 1, self.blocksMatrix.maxy - 1, self.blocksMatrix.maxz - 1))
+
+        self.size_label.setText(
+            f"Size: ({self.blocksMatrix.maxx}, {self.blocksMatrix.maxy}, {self.blocksMatrix.maxz})")
 
     def place_block(self):
         self.blocksMatrix.place_id(self.id_selector.currentText(), self.position_to_place.get())
@@ -130,8 +135,10 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
 
         self.blocksMatrix = PBB.BlocksMatrix("", (5, 5, 5))
-        self.blocksMatrix.place_id("pb.box", (0, 0, 0))
-        self.blocksMatrix.place_id("pb.box", (1, 0, 0))
+        self.blocksMatrix.place_id("pbb.box", (0, 0, 0))
+        self.blocksMatrix.place_id("pbb.box", (1, 0, 0))
+        self.blocksMatrix.place_id("pbb.box", (0, 1, 0))
+        self.blocksMatrix.place_id("pbb.box", (0, 0, 1))
 
         self.render_label = QLabel()
         self.render_label.setPixmap(self.rendered_image)
@@ -140,7 +147,7 @@ class MainWindow(QMainWindow):
         self.render_label.setScaledContents(True)
 
         self.id_selector = QComboBox()
-        self.id_selector.addItems(PBB.all_ids)
+        self.id_selector.addItems(PBB.idsHandler.all_ids)
         self.id_selector.setStyleSheet(f"QWidget {'{'}{style}{'}'}")
 
         self.position_to_place = Vec3Entry()
@@ -173,6 +180,10 @@ class MainWindow(QMainWindow):
         self.new_button.clicked.connect(self.new_matrix)
         self.new_button.clicked.connect(self.update_image)
 
+        self.size_label = QLabel()
+        self.size_label.setStyleSheet(f"qproperty-alignment: {int(Qt.AlignmentFlag.AlignLeft)};")
+        self.size_label.setMaximumSize(1000000,13)
+
         openSaveNewWidget = QWidget()
         openSaveNewWidget.setLayout(openSaveNewlayout)
         openSaveNewWidget.setFixedSize(200, 50)
@@ -181,6 +192,7 @@ class MainWindow(QMainWindow):
         openSaveNewlayout.addWidget(self.new_button)
 
         layout.addWidget(openSaveNewWidget)
+        layout.addWidget(self.size_label)
         layout.addWidget(self.render_label)
         layout.addWidget(self.id_selector)
         layout.addWidget(self.place_button)
@@ -216,6 +228,9 @@ class CreateNewMatrixDialog(QDialog):
         self.layout.addWidget(self.vec)
         self.layout.addWidget(self.buttonBox)
         self.setLayout(self.layout)
+
+        self.setMinimumSize(250, 120)
+        self.setMaximumSize(650, 120)
 
 
 app = QApplication([])

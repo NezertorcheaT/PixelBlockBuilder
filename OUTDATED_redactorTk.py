@@ -100,7 +100,7 @@ IDDropString = StringVar()
 IDDropString.set("null")
 
 # Create Dropdown menu
-IDDrop = OptionMenu(idss, IDDropString, *all_ids)
+IDDrop = OptionMenu(idss, IDDropString, *idsHandler.all_ids)
 IDLabel = Label(idss, text="ID")
 
 opsavbats = Frame(window)
