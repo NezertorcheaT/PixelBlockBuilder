@@ -1,13 +1,23 @@
+import sys
+
+from PIL.Image import Resampling
 from PIL.ImageQt import ImageQt
-from PIL import Image
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
     QVBoxLayout,
     QWidget,
-    QLabel, QComboBox, QSpinBox, QHBoxLayout, QSizePolicy, QPushButton, QFileDialog, QDialog, QDialogButtonBox,
+    QLabel,
+    QComboBox,
+    QSpinBox,
+    QHBoxLayout,
+    QSizePolicy,
+    QPushButton,
+    QFileDialog,
+    QDialog,
+    QDialogButtonBox,
     QCheckBox,
     QSlider
 )
@@ -74,7 +84,7 @@ class MainWindow(QMainWindow):
 
         self.setMinimumSize(
             bim_size[0] * 2 + 50,
-            bim_size[1] * 2 + 187 + 46*2
+            bim_size[1] * 2 + 187 + 46 * 2
         )
 
         self.position_to_place.setMaximum(
@@ -90,7 +100,7 @@ class MainWindow(QMainWindow):
             bim.alpha_composite(self.axis_matrix.render())
 
         bim = bim.resize((int(bim_size[0] * self.image_size_slider.value()),
-                          int(bim_size[1] * self.image_size_slider.value())), Image.NEAREST)
+                          int(bim_size[1] * self.image_size_slider.value())), Resampling.NEAREST)
 
         im = ImageQt(bim)
         self.rendered_image = QPixmap.fromImage(im)
@@ -130,10 +140,13 @@ class MainWindow(QMainWindow):
             "All Files (*.*);; Pixel Block Files (*.pbn)",
             "Pixel Block Files (*.pbn)"
         )[0]
-        if filename == '':
+        self.open_matrix_by_path(filename)
+
+    def open_matrix_by_path(self, path: str):
+        if path == '':
             return
 
-        self.blocksMatrix = PBB.BlocksMatrix(filename)
+        self.blocksMatrix = PBB.BlocksMatrix(path)
 
     def new_matrix(self):
         marixDialog = CreateNewMatrixDialog()
@@ -146,6 +159,7 @@ class MainWindow(QMainWindow):
 
         self.rendered_image: QPixmap = QPixmap()
         self.setWindowTitle("Pixel Block Builder by NezertorcheaT")
+        self.setWindowIcon(QIcon('icon.ico'))
 
         layout = QVBoxLayout()
 
@@ -212,7 +226,6 @@ class MainWindow(QMainWindow):
         params_layout = QHBoxLayout()
         params_Widget = QWidget()
         params_Widget.setLayout(params_layout)
-        print(params_Widget.minimumSize().height())
         params_Widget.setMaximumSize(1000000, 35)
 
         self.size_label = QLabel()
@@ -245,6 +258,9 @@ class MainWindow(QMainWindow):
         widget = QWidget()
         widget.setLayout(layout)
 
+        if len(sys.argv) == 2 and '.pbn' in sys.argv[-1]:
+            self.open_matrix_by_path(sys.argv[-1])
+
         self.update_image()
 
         self.setCentralWidget(widget)
@@ -276,7 +292,7 @@ class CreateNewMatrixDialog(QDialog):
         self.setMaximumSize(650, 120)
 
 
-app = QApplication([])
+app = QApplication(sys.argv)
 window = MainWindow()
 window.show()
 

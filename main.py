@@ -42,7 +42,6 @@ class IDHandler:
             self.full[i]["data"] = self.all_datas[j]
             j += 1
         self.dataToId = dict(zip((i.get("data", "") for i in self.all_values), self.all_ids))
-        print(self.all_ids)
 
 
 idsHandler = IDHandler()
