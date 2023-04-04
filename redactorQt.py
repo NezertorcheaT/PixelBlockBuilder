@@ -1,4 +1,5 @@
 from PIL.ImageQt import ImageQt
+from PIL import Image
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
@@ -8,6 +9,7 @@ from PyQt6.QtWidgets import (
     QWidget,
     QLabel, QComboBox, QSpinBox, QHBoxLayout, QSizePolicy, QPushButton, QFileDialog, QDialog, QDialogButtonBox,
     QCheckBox,
+    QSlider
 )
 
 import main as PBB
@@ -66,9 +68,13 @@ class Vec3Entry(QLabel):
 class MainWindow(QMainWindow):
     def update_image(self):
         bim = self.blocksMatrix.render()
+        bim_size = bim.size
+
+        # bim.crop((bim_size[0], bim_size[1], bim_size[0], bim_size[1]))
+
         self.setMinimumSize(
-            bim.size[0] * 2 + 50,
-            bim.size[1] * 2 + 187 + 46
+            bim_size[0] * 2 + 50,
+            bim_size[1] * 2 + 187 + 46*2
         )
 
         self.position_to_place.setMaximum(
@@ -83,11 +89,14 @@ class MainWindow(QMainWindow):
         if self.show_cursor.isChecked():
             bim.alpha_composite(self.axis_matrix.render())
 
+        bim = bim.resize((int(bim_size[0] * self.image_size_slider.value()),
+                          int(bim_size[1] * self.image_size_slider.value())), Image.NEAREST)
+
         im = ImageQt(bim)
         self.rendered_image = QPixmap.fromImage(im)
         self.render_label.setMinimumSize(
-            bim.size[0] * 2,
-            bim.size[1] * 2
+            bim_size[0] * 2,
+            bim_size[1] * 2
         )
         self.render_label.setPixmap(self.rendered_image)
 
@@ -152,7 +161,16 @@ class MainWindow(QMainWindow):
         self.render_label.setPixmap(self.rendered_image)
         # self.render_label.setStyleSheet("border: 2px solid black;")
         self.render_label.setStyleSheet(f"QLabel {'{'}{style}{'}'}")
-        self.render_label.setScaledContents(True)
+        # self.render_label.setScaledContents(True)
+        self.render_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.image_size_slider = QSlider(Qt.Orientation.Horizontal, self)
+        self.image_size_slider.setMinimum(1)
+        self.image_size_slider.setMaximum(20)
+        self.image_size_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        self.image_size_slider.setTickInterval(1)
+        self.image_size_slider.setValue(4)
+        self.image_size_slider.valueChanged.connect(self.update_image)
 
         self.id_selector = QComboBox()
         self.id_selector.addItems(PBB.idsHandler.all_ids_to_ui)
@@ -220,6 +238,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.render_label)
         layout.addWidget(self.id_selector)
         layout.addWidget(self.place_button)
+        layout.addWidget(self.image_size_slider)
         layout.addWidget(self.position_to_place)
         layout.addWidget(self.update_button)
 
