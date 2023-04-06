@@ -77,7 +77,7 @@ class Vec3Entry(QLabel):
 
 class MainWindow(QMainWindow):
     def update_image(self):
-        bim = self.blocksMatrix.render()
+        bim = self.blocksMatrix.render(shadows=self.shadows.isChecked())
         bim_size = bim.size
 
         # bim.crop((bim_size[0], bim_size[1], bim_size[0], bim_size[1]))
@@ -127,7 +127,7 @@ class MainWindow(QMainWindow):
         if filename == '':
             return
         if '.png' in filename:
-            self.blocksMatrix.render().save(filename)
+            self.blocksMatrix.render(shadows=self.shadows.isChecked()).save(filename)
             return
 
         f = open(filename, "w")
@@ -169,7 +169,7 @@ class MainWindow(QMainWindow):
             return
 
         try:
-            self.blocksMatrix.render(True, filename)
+            self.blocksMatrix.render(True, filename,shadows=self.shadows.isChecked())
         except Exception as e:
             QMessageBox.critical(
                 self,
@@ -273,6 +273,10 @@ class MainWindow(QMainWindow):
         self.show_cursor.setText("Show cursor")
         self.show_cursor.toggled.connect(self.update_image)
 
+        self.shadows = QCheckBox()
+        self.shadows.setText("Shadows")
+        self.shadows.toggled.connect(self.update_image)
+
         rotation_label = QLabel()
         rotation_label.setText('Rotation')
 
@@ -296,6 +300,7 @@ class MainWindow(QMainWindow):
 
         params_layout.addWidget(self.size_label)
         params_layout.addWidget(self.show_cursor)
+        params_layout.addWidget(self.shadows)
 
         layout.addWidget(openSaveNewWidget)
         layout.addWidget(params_Widget)

@@ -169,7 +169,7 @@ class BlocksMatrix:
     def clamped_get_from_blocksMatrix(self, x: int, y: int, z: int) -> str:
         return self.blocksMatrix[clamp(x, 0, self.maxx - 1), clamp(y, 0, self.maxy - 1), clamp(z, 0, self.maxz - 1)]
 
-    def render(self, save_frames=False, path=f'{os.path.dirname(__file__)}\\render'):
+    def render(self, save_frames=False, path=f'{os.path.dirname(__file__)}\\render', shadows=True):
         if save_frames:
             clear_render_folder(path)
         im = Image.new("RGBA", self.get_image_size(), color=(0, 0, 0, 0))
@@ -187,7 +187,8 @@ class BlocksMatrix:
 
                     topaste = Image.open(Block.get_param_from_id(self.blocksMatrix[x, y, z]))
                     topaste = topaste.convert('RGBA')
-                    topaste = ImageEnhance.Brightness(topaste).enhance(self.get_brightness((x, y, z)))
+                    if shadows:
+                        topaste = ImageEnhance.Brightness(topaste).enhance(self.get_brightness((x, y, z)))
 
                     neww = Image.new("RGBA", (im.width, im.height))
 
