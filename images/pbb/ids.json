@@ -9,6 +9,16 @@
     "transmission": 0,
     "hidden": false
   },
+  "pbb.box_x+": {
+    "data": "box_x+.png",
+    "transmission": 0,
+    "hidden": true
+  },
+  "pbb.box_x-": {
+    "data": "box_x-.png",
+    "transmission": 0,
+    "hidden": true
+  },
   "pbb.circle": {
     "data": "circle.png",
     "transmission": 0.95,
@@ -27,54 +37,64 @@
   "pbb.ramp": {
     "data": "null.png",
     "transmission": 0.5,
-    "hidden": true,
+    "hidden": false,
     "z_spin": [
       "pbb.ramp_z_0",
       "pbb.ramp_z_90",
       "pbb.ramp_z_180",
-      "pbb.ramp_z_270",
-      "pbb.ramp_z_0"
+      "pbb.ramp_z_270"
     ]
   },
   "pbb.ramp_z_0": {
     "data": "rampZ0.png",
     "transmission": 0.5,
-    "hidden": false
+    "hidden": true
   },
   "pbb.ramp_z_90": {
     "data": "rampZ90.png",
     "transmission": 0.5,
-    "hidden": false
+    "hidden": true
   },
   "pbb.ramp_z_180": {
     "data": "rampZ180.png",
     "transmission": 0.5,
-    "hidden": false
+    "hidden": true
   },
   "pbb.ramp_z_270": {
     "data": "rampZ270.png",
     "transmission": 0.5,
-    "hidden": false
+    "hidden": true
   },
   "pbb.ramp_up_z_0": {
     "data": "urampZ0.png",
     "transmission": 0.5,
-    "hidden": false
+    "hidden": true
   },
   "pbb.ramp_up_z_90": {
     "data": "urampZ90.png",
     "transmission": 0.5,
-    "hidden": false
+    "hidden": true
   },
   "pbb.ramp_up_z_180": {
     "data": "urampZ180.png",
     "transmission": 0.5,
-    "hidden": false
+    "hidden": true
   },
   "pbb.ramp_up_z_270": {
     "data": "urampZ270.png",
     "transmission": 0.5,
-    "hidden": false
+    "hidden": true
+  },
+  "pbb.ramp_up": {
+    "data": "null.png",
+    "transmission": 0.5,
+    "hidden": false,
+    "z_spin": [
+      "pbb.ramp_up_z_0",
+      "pbb.ramp_up_z_90",
+      "pbb.ramp_up_z_180",
+      "pbb.ramp_up_z_270"
+    ]
   },
   "pbb.xyz": {
     "data": "XrYgZb.png",

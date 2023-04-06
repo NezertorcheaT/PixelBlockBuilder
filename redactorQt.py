@@ -19,7 +19,7 @@ from PyQt6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QCheckBox,
-    QSlider
+    QSlider, QMessageBox
 )
 
 import main as PBB
@@ -81,10 +81,9 @@ class MainWindow(QMainWindow):
         bim_size = bim.size
 
         # bim.crop((bim_size[0], bim_size[1], bim_size[0], bim_size[1]))
-
         self.setMinimumSize(
-            bim_size[0] * 2 + 50,
-            bim_size[1] * 2 + 187 + 46 * 2
+            bim_size[0] * 2 + 50+26+20,
+            bim_size[1] * 2 + 187 + 46 * 3 + 13
         )
 
         self.position_to_place.setMaximum(
@@ -111,7 +110,10 @@ class MainWindow(QMainWindow):
         self.render_label.setPixmap(self.rendered_image)
 
     def place_block(self):
-        self.blocksMatrix.place_id(self.id_selector.currentText(), self.position_to_place.get())
+        ID = self.id_selector.currentText()
+        if self.rotation_size_slider.isEnabled():
+            ID = PBB.Block.get_param_from_id(ID, 'z_spin')[self.rotation_size_slider.value()]
+        self.blocksMatrix.place_id(ID, self.position_to_place.get())
 
     def save_matrix(self):
         filename = QFileDialog.getSaveFileName(
@@ -154,6 +156,35 @@ class MainWindow(QMainWindow):
         if marixDialog.exec():
             self.blocksMatrix = PBB.BlocksMatrix(size=marixDialog.vec.get())
 
+    def rotation_changed(self, s):
+        if PBB.idsHandler.full[s].get("z_spin", None):
+            self.rotation_size_slider.setEnabled(True)
+        else:
+            self.rotation_size_slider.setEnabled(False)
+
+    def save_full_render(self):
+        filename = str(QFileDialog.getExistingDirectory(self, "Select Render Directory", ))
+
+        if filename == '':
+            return
+
+        try:
+            self.blocksMatrix.render(True, filename)
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Render Error!",
+                f"Something went very wrong. This is Error message:\n{e}",
+                buttons=QMessageBox.StandardButton.Ok
+            )
+            return
+        QMessageBox.information(
+            self,
+            "Render is Done!",
+            f"You render at folder:\n{filename}",
+            buttons=QMessageBox.StandardButton.Ok
+        )
+
     def __init__(self):
         super().__init__()
 
@@ -189,6 +220,7 @@ class MainWindow(QMainWindow):
         self.id_selector = QComboBox()
         self.id_selector.addItems(PBB.idsHandler.all_ids_to_ui)
         self.id_selector.setStyleSheet(f"QWidget {'{'}{style}{'}'}")
+        self.id_selector.currentTextChanged.connect(self.rotation_changed)
 
         self.position_to_place = Vec3Entry()
         self.position_to_place.setMaximum(
@@ -223,6 +255,11 @@ class MainWindow(QMainWindow):
         self.new_button.clicked.connect(self.new_matrix)
         self.new_button.clicked.connect(self.update_image)
 
+        self.render_button = QPushButton()
+        self.render_button.setText("Render")
+        self.render_button.clicked.connect(self.save_full_render)
+        self.new_button.clicked.connect(self.update_image)
+
         params_layout = QHBoxLayout()
         params_Widget = QWidget()
         params_Widget.setLayout(params_layout)
@@ -236,12 +273,26 @@ class MainWindow(QMainWindow):
         self.show_cursor.setText("Show cursor")
         self.show_cursor.toggled.connect(self.update_image)
 
+        rotation_label = QLabel()
+        rotation_label.setText('Rotation')
+
+        zoom_label = QLabel()
+        zoom_label.setText('Zoom')
+
+        self.rotation_size_slider = QSlider(Qt.Orientation.Horizontal, self)
+        self.rotation_size_slider.setMinimum(0)
+        self.rotation_size_slider.setMaximum(3)
+        self.rotation_size_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        self.rotation_size_slider.setTickInterval(1)
+        self.rotation_size_slider.setValue(1)
+
         openSaveNewWidget = QWidget()
         openSaveNewWidget.setLayout(openSaveNewlayout)
-        openSaveNewWidget.setFixedSize(200, 40)
+        openSaveNewWidget.setFixedSize(236, 40)
         openSaveNewlayout.addWidget(self.save_button)
         openSaveNewlayout.addWidget(self.open_button)
         openSaveNewlayout.addWidget(self.new_button)
+        openSaveNewlayout.addWidget(self.render_button)
 
         params_layout.addWidget(self.size_label)
         params_layout.addWidget(self.show_cursor)
@@ -251,7 +302,10 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.render_label)
         layout.addWidget(self.id_selector)
         layout.addWidget(self.place_button)
+        layout.addWidget(zoom_label)
         layout.addWidget(self.image_size_slider)
+        layout.addWidget(rotation_label)
+        layout.addWidget(self.rotation_size_slider)
         layout.addWidget(self.position_to_place)
         layout.addWidget(self.update_button)
 
@@ -261,6 +315,7 @@ class MainWindow(QMainWindow):
         if len(sys.argv) == 2 and '.pbn' in sys.argv[-1]:
             self.open_matrix_by_path(sys.argv[-1])
 
+        self.rotation_changed('null')
         self.update_image()
 
         self.setCentralWidget(widget)

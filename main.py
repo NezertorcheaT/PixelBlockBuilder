@@ -61,12 +61,12 @@ class Block:
         x, y, z = pos
         new_pos = glm.vec2(x * -8, x * 4)
         new_pos += glm.vec2(y * 8, y * 4)
-        new_pos += glm.vec2(0, z * -9)
+        new_pos += glm.vec2(0, z * -8)
         return int(new_pos.x), int(new_pos.y)
 
     @staticmethod
     def matrix_pos_to_image_pos_glm(pos: glm.vec3) -> glm.vec2:
-        return glm.vec2((pos.y - pos.x) * 8, (pos.x + pos.y) * 4 + pos.z * -9)
+        return glm.vec2((pos.y - pos.x) * 8, (pos.x + pos.y) * 4 + pos.z * -8)
 
 
 def clear_render_folder(path: str):
@@ -130,7 +130,7 @@ class BlocksMatrix:
 
     def place(self, block: Block, pos: tuple[int, int, int]):
         if block.ID in idsHandler.all_ids:
-            self.blocksMatrix[pos] = Block.get_param_from_id(block.ID)
+            self.blocksMatrix[pos] = block.ID
 
     def place_id(self, ID: str, pos: tuple[int, int, int]):
         if ID in idsHandler.all_ids:
@@ -166,6 +166,9 @@ class BlocksMatrix:
         return int((min(max_x00.x, max_xy0.x, max_0xz.x, max_0y0.x, max_00z.x)) * -2), \
                int((max(max_x00.y, max_xy0.y, max_0xz.y, max_0y0.y, max_00z.y) + 4) * 2)
 
+    def clamped_get_from_blocksMatrix(self, x: int, y: int, z: int) -> str:
+        return self.blocksMatrix[clamp(x, 0, self.maxx - 1), clamp(y, 0, self.maxy - 1), clamp(z, 0, self.maxz - 1)]
+
     def render(self, save_frames=False, path=f'{os.path.dirname(__file__)}\\render'):
         if save_frames:
             clear_render_folder(path)
@@ -184,8 +187,7 @@ class BlocksMatrix:
 
                     topaste = Image.open(Block.get_param_from_id(self.blocksMatrix[x, y, z]))
                     topaste = topaste.convert('RGBA')
-                    filter = ImageEnhance.Brightness(topaste)
-                    topaste = filter.enhance(self.get_brightness((x, y, z)))
+                    topaste = ImageEnhance.Brightness(topaste).enhance(self.get_brightness((x, y, z)))
 
                     neww = Image.new("RGBA", (im.width, im.height))
 
@@ -196,4 +198,5 @@ class BlocksMatrix:
 
                     if save_frames:
                         im.save(f"{path}\\m_Image {pcs} ({x}, {y}, {z}).png")
+
         return im
