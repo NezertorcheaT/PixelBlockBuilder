@@ -2,7 +2,7 @@ import sys
 
 from PIL.Image import Resampling
 from PIL.ImageQt import ImageQt
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtWidgets import (
     QApplication,
@@ -33,20 +33,31 @@ border-color: gray;
 
 
 class Vec3Entry(QLabel):
+    valueChanged=pyqtSignal()
+
+    @pyqtSlot()
+    def valueChangedSlot(status, source):
+        pass
+
     def __init__(self):
         super().__init__()
         self.setStyleSheet(f"QWidget {'{'}{style}{'}'}")
-        lay = QHBoxLayout()
-        self.setLayout(lay)
+        self.lay = QHBoxLayout()
+        self.setLayout(self.lay)
 
-        self.XEntry = QSpinBox()
-        self.YEntry = QSpinBox()
-        self.ZEntry = QSpinBox()
+        self.__XEntry = QSpinBox()
+        self.__YEntry = QSpinBox()
+        self.__ZEntry = QSpinBox()
+        self.__textLabel = QLabel("Vec3:")
 
-        lay.addWidget(QLabel("Vec3:"))
-        lay.addWidget(self.XEntry)
-        lay.addWidget(self.YEntry)
-        lay.addWidget(self.ZEntry)
+        self.__XEntry.valueChanged.connect(self.valueChanged.emit)
+        self.__YEntry.valueChanged.connect(self.valueChanged.emit)
+        self.__ZEntry.valueChanged.connect(self.valueChanged.emit)
+
+        self.lay.addWidget(self.__textLabel)
+        self.lay.addWidget(self.__XEntry)
+        self.lay.addWidget(self.__YEntry)
+        self.lay.addWidget(self.__ZEntry)
 
         # self.setFixedSize(200, 40)
         self.setMinimumSize(200, 40)
@@ -57,22 +68,51 @@ class Vec3Entry(QLabel):
         )
 
     def get(self):
-        return self.XEntry.value(), self.YEntry.value(), self.ZEntry.value()
+        return self.__XEntry.value(), self.__YEntry.value(), self.__ZEntry.value()
 
     def setMaximum(self, size: tuple[int, int, int]):
-        self.XEntry.setMaximum(size[0])
-        self.YEntry.setMaximum(size[1])
-        self.ZEntry.setMaximum(size[2])
+        self.__XEntry.setMaximum(size[0])
+        self.__YEntry.setMaximum(size[1])
+        self.__ZEntry.setMaximum(size[2])
 
     def setMinimum(self, size: tuple[int, int, int]):
-        self.XEntry.setMinimum(size[0])
-        self.YEntry.setMinimum(size[1])
-        self.ZEntry.setMinimum(size[2])
+        self.__XEntry.setMinimum(size[0])
+        self.__YEntry.setMinimum(size[1])
+        self.__ZEntry.setMinimum(size[2])
 
     def setValue(self, val: tuple[int, int, int]):
-        self.XEntry.setValue(val[0])
-        self.YEntry.setValue(val[1])
-        self.ZEntry.setValue(val[2])
+        self.__XEntry.setValue(val[0])
+        self.__YEntry.setValue(val[1])
+        self.__ZEntry.setValue(val[2])
+
+    def setText(self, a0: str):
+        self.__textLabel.setText(a0)
+
+
+class Vec4Entry(Vec3Entry):
+    def __init__(self):
+        super().__init__()
+        self.__WEntry = QSpinBox()
+        self.__WEntry.valueChanged.connect(self.valueChanged.emit)
+
+        self.lay.addWidget(self.__WEntry)
+
+        self.setText('Vec4: ')
+
+    def get(self):
+        return super(Vec4Entry, self).get() + (self.__WEntry.value())
+
+    def setMaximum(self, size: tuple[int, int, int, int]):
+        super(Vec4Entry, self).setMaximum(size)
+        self.__WEntry.setMaximum(size[3])
+
+    def setMinimum(self, size: tuple[int, int, int, int]):
+        super(Vec4Entry, self).setMinimum(size)
+        self.__WEntry.setMinimum(size[3])
+
+    def setValue(self, val: tuple[int, int, int, int]):
+        super(Vec4Entry, self).setValue(val)
+        self.__WEntry.setValue(val[2])
 
 
 class MainWindow(QMainWindow):
@@ -82,7 +122,7 @@ class MainWindow(QMainWindow):
 
         # bim.crop((bim_size[0], bim_size[1], bim_size[0], bim_size[1]))
         self.setMinimumSize(
-            bim_size[0] * 2 + 50+26+20,
+            bim_size[0] * 2 + 50 + 26 + 20,
             bim_size[1] * 2 + 187 + 46 * 3 + 13
         )
 
@@ -169,7 +209,7 @@ class MainWindow(QMainWindow):
             return
 
         try:
-            self.blocksMatrix.render(True, filename,shadows=self.shadows.isChecked())
+            self.blocksMatrix.render(True, filename, shadows=self.shadows.isChecked())
         except Exception as e:
             QMessageBox.critical(
                 self,
@@ -225,9 +265,7 @@ class MainWindow(QMainWindow):
         self.position_to_place = Vec3Entry()
         self.position_to_place.setMaximum(
             (self.blocksMatrix.maxx - 1, self.blocksMatrix.maxy - 1, self.blocksMatrix.maxz - 1))
-        self.position_to_place.XEntry.valueChanged.connect(self.update_image)
-        self.position_to_place.YEntry.valueChanged.connect(self.update_image)
-        self.position_to_place.ZEntry.valueChanged.connect(self.update_image)
+        self.position_to_place.valueChanged.connect(self.update_image)
 
         self.place_button = QPushButton()
         self.place_button.setText("Place")
