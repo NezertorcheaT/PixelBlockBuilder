@@ -1,6 +1,7 @@
-from PyQt6.QtWidgets import QPushButton
 from PyQt6 import QtGui, QtWidgets
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import QPushButton
 
 
 class ColorButton(QPushButton):
@@ -29,7 +30,9 @@ class ColorButton(QPushButton):
             self.colorChanged.emit(color)
 
         if self._color:
-            self.setStyleSheet("background-color: %s;" % self._color)
+            c = QColor(self._color)
+            c = (255 - c.red(), 255 - c.green(), 255 - c.blue())
+            self.setStyleSheet('ColorButton{'+f"background-color: {self._color};color: {rgb_to_hex(c[0], c[1], c[2])};"+'}')
         else:
             self.setStyleSheet("")
 
@@ -44,14 +47,23 @@ class ColorButton(QPushButton):
 
         '''
         dlg = QtWidgets.QColorDialog(self)
+        dlg.setStyleSheet("ColorButton{background-color: #ffffff;color: #000000;}")
         if self._color:
             dlg.setCurrentColor(QtGui.QColor(self._color))
 
         if dlg.exec():
             self.setColor(dlg.currentColor().name())
 
+            c = QColor(self._color)
+            c = (255 - c.red(), 255 - c.green(), 255 - c.blue())
+            self.setStyleSheet('ColorButton{'+f"background-color: {self._color};color: {rgb_to_hex(c[0], c[1], c[2])};"+'}')
+
     def mousePressEvent(self, e):
         if e.button() == Qt.MouseButton.RightButton:
             self.setColor(self._default)
 
         return super(ColorButton, self).mousePressEvent(e)
+
+
+def rgb_to_hex(r, g, b):
+    return '#{:02x}{:02x}{:02x}'.format(r, g, b)

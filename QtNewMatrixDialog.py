@@ -5,9 +5,9 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox,
 )
 
-from QtNewWidgets.QtVecEntry import *
+from QtVecEntry import *
 
-style = '''
+styleN = '''
 border-style: outset;
 border-width: 1px;
 border-radius: 10px;

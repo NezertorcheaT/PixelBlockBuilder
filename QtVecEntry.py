@@ -1,3 +1,5 @@
+import os
+
 from PyQt6.QtCore import pyqtSignal, pyqtSlot
 from PyQt6.QtWidgets import (
     QLabel,
@@ -6,13 +8,16 @@ from PyQt6.QtWidgets import (
     QSizePolicy
 )
 
-style = '''
-border-style: outset;
+styleQl = '''
+QLabel {
+border-style: solid;
 border-width: 1px;
 border-radius: 10px;
 border-color: gray;
+}
 '''
-
+with open(f'{os.path.dirname(__file__)}\\style.qss', 'r') as f:
+    style = f.read()
 
 class Vec3Entry(QLabel):
     valueChanged = pyqtSignal()
@@ -23,7 +28,7 @@ class Vec3Entry(QLabel):
 
     def __init__(self):
         super().__init__()
-        self.setStyleSheet(f"QWidget {'{'}{style}{'}'}")
+        self.setStyleSheet(style+styleQl)
         self.lay = QHBoxLayout()
         self.setLayout(self.lay)
 

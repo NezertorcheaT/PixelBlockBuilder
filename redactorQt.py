@@ -10,18 +10,13 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QFileDialog,
     QCheckBox,
-    QSlider, QMessageBox
+    QSlider,
+    QMessageBox
 )
 
 import main as PBB
-from QtNewWidgets import *
-
-style = '''
-border-style: outset;
-border-width: 1px;
-border-radius: 10px;
-border-color: gray;
-'''
+from QtColorButton import *
+from QtNewMatrixDialog import *
 
 
 class MainWindow(QMainWindow):
@@ -45,7 +40,7 @@ class MainWindow(QMainWindow):
         self.axis_matrix.place_id("selector", self.position_to_place.get())
 
         if self.show_cursor.isChecked():
-            bim.alpha_composite(self.axis_matrix.render())
+            bim.alpha_composite(self.axis_matrix.render(shadows=False))
 
         bim = bim.resize((int(bim_size[0] * self.image_size_slider.value()),
                           int(bim_size[1] * self.image_size_slider.value())), Resampling.NEAREST)
@@ -61,8 +56,13 @@ class MainWindow(QMainWindow):
     def place_block(self):
         ID = self.id_selector.currentText()
         if self.rotation_size_slider.isEnabled():
-            ID = PBB.Block.get_param_from_id(ID, 'z_spin')[self.rotation_size_slider.value()]
-        self.blocksMatrix.place_id(ID, self.position_to_place.get())
+            ID = PBB.Block.get_param_from_id(ID, 'variants')[self.rotation_size_slider.value()]
+
+        t = (QColor(self.color_picker.color()).toRgb().red(),
+             QColor(self.color_picker.color()).toRgb().green(),
+             QColor(self.color_picker.color()).toRgb().blue(),
+             255)
+        self.blocksMatrix.place_id(ID, self.position_to_place.get(), t)
 
     def save_matrix(self):
         filename = QFileDialog.getSaveFileName(
@@ -101,12 +101,13 @@ class MainWindow(QMainWindow):
 
     def new_matrix(self):
         marixDialog = CreateNewMatrixDialog()
+        marixDialog.setStyleSheet(style)
 
         if marixDialog.exec():
             self.blocksMatrix = PBB.BlocksMatrix(size=marixDialog.vec.get())
 
     def rotation_changed(self, s):
-        if PBB.idsHandler.full[s].get("z_spin", None):
+        if PBB.idsHandler.full[s].get("variants", None):
             self.rotation_size_slider.setEnabled(True)
         else:
             self.rotation_size_slider.setEnabled(False)
@@ -134,6 +135,12 @@ class MainWindow(QMainWindow):
             buttons=QMessageBox.StandardButton.Ok
         )
 
+    def rsssm(self):
+        self.rotation_size_slider.setMaximum(len(PBB.Block.get_param_from_id(self.id_selector.currentText(),
+                                                                             'variants') if PBB.Block.get_param_from_id(
+            self.id_selector.currentText(),
+            'variants') is not None else [0]) - 1 if self.rotation_size_slider.isEnabled() else 1)
+
     def __init__(self):
         super().__init__()
 
@@ -154,9 +161,9 @@ class MainWindow(QMainWindow):
         self.render_label = QLabel()
         self.render_label.setPixmap(self.rendered_image)
         # self.render_label.setStyleSheet("border: 2px solid black;")
-        self.render_label.setStyleSheet(f"QLabel {'{'}{style}{'}'}")
         # self.render_label.setScaledContents(True)
         self.render_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.render_label.setStyleSheet('border-style: solid;border-width: 1px;border-radius: 10px;border-color: gray;')
 
         self.image_size_slider = QSlider(Qt.Orientation.Horizontal, self)
         self.image_size_slider.setMinimum(1)
@@ -168,8 +175,10 @@ class MainWindow(QMainWindow):
 
         self.id_selector = QComboBox()
         self.id_selector.addItems(PBB.idsHandler.all_ids_to_ui)
-        self.id_selector.setStyleSheet(f"QWidget {'{'}{style}{'}'}")
         self.id_selector.currentTextChanged.connect(self.rotation_changed)
+        self.id_selector.currentTextChanged.connect(self.rsssm)
+        self.id_selector.currentTextChanged.connect(lambda: rotation_label.setText(
+            f'Variant: {(j if (j := PBB.Block.get_param_from_id(self.id_selector.currentText(), "variants")) and j is not None else ["null"])[self.rotation_size_slider.value() if j is not None else 0]}'))
 
         self.position_to_place = Vec3Entry()
         self.position_to_place.setMaximum(
@@ -205,7 +214,7 @@ class MainWindow(QMainWindow):
         self.render_button = QPushButton()
         self.render_button.setText("Render")
         self.render_button.clicked.connect(self.save_full_render)
-        self.new_button.clicked.connect(self.update_image)
+        self.render_button.clicked.connect(self.update_image)
 
         params_layout = QHBoxLayout()
         params_Widget = QWidget()
@@ -225,19 +234,23 @@ class MainWindow(QMainWindow):
         self.shadows.toggled.connect(self.update_image)
 
         rotation_label = QLabel()
-        rotation_label.setText('Rotation')
+        rotation_label.setText('Variant: null')
 
         zoom_label = QLabel()
         zoom_label.setText('Zoom')
 
         self.rotation_size_slider = QSlider(Qt.Orientation.Horizontal, self)
         self.rotation_size_slider.setMinimum(0)
-        self.rotation_size_slider.setMaximum(3)
+        self.rsssm()
         self.rotation_size_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.rotation_size_slider.setTickInterval(1)
         self.rotation_size_slider.setValue(1)
+        self.rotation_size_slider.valueChanged.connect(lambda: rotation_label.setText(
+            f'Variant: {(j if (j := PBB.Block.get_param_from_id(self.id_selector.currentText(), "variants")) and j is not None else ["null"])[self.rotation_size_slider.value() if j is not None else 0]}'))
 
-        сс=ColorButton()
+        self.color_picker = ColorButton()
+        self.color_picker.setText("Color")
+        self.color_picker.setColor('#ffffff')
 
         openSaveNewWidget = QWidget()
         openSaveNewWidget.setLayout(openSaveNewlayout)
@@ -262,7 +275,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.rotation_size_slider)
         layout.addWidget(self.position_to_place)
         layout.addWidget(self.update_button)
-        layout.addWidget(сс)
+        layout.addWidget(self.color_picker)
 
         widget = QWidget()
         widget.setLayout(layout)
@@ -277,6 +290,7 @@ class MainWindow(QMainWindow):
 
 
 app = QApplication(sys.argv)
+app.setStyleSheet(style)
 window = MainWindow()
 window.show()
 

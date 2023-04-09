@@ -2,6 +2,7 @@
   "balls.two_balls": {
     "data": "balls.png",
     "transmission": 0.5,
-    "hidden": false
+    "hidden": false,
+    "colorable": true
   }
 }
