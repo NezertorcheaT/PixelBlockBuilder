@@ -21,7 +21,7 @@ from QtNewMatrixDialog import *
 
 class MainWindow(QMainWindow):
     def update_image(self):
-        bim = self.blocksMatrix.render(shadows=self.shadows.isChecked())
+        bim = self.blocksMatrix.render(shadows=self.shadows.isChecked(),scale=self.pix_scale.value())
         bim_size = bim.size
 
         # bim.crop((bim_size[0], bim_size[1], bim_size[0], bim_size[1]))
@@ -40,7 +40,7 @@ class MainWindow(QMainWindow):
         self.axis_matrix.place_id("selector", self.position_to_place.get())
 
         if self.show_cursor.isChecked():
-            bim.alpha_composite(self.axis_matrix.render(shadows=False))
+            bim.alpha_composite(self.axis_matrix.render(shadows=False,scale=self.pix_scale.value()))
 
         bim = bim.resize((int(bim_size[0] * self.image_size_slider.value()),
                           int(bim_size[1] * self.image_size_slider.value())), Resampling.NEAREST)
@@ -76,7 +76,8 @@ class MainWindow(QMainWindow):
         if filename == '':
             return
         if '.png' in filename:
-            self.blocksMatrix.render(shadows=self.shadows.isChecked()).save(filename)
+            self.update_image()
+            self.rendered_image.save(filename)
             return
 
         f = open(filename, "w")
@@ -252,6 +253,10 @@ class MainWindow(QMainWindow):
         self.color_picker.setText("Color")
         self.color_picker.setColor('#ffffff')
 
+        self.pix_scale = QSpinBox()
+        self.pix_scale.setMinimum(16)
+        self.pix_scale.valueChanged.connect(self.update_image)
+
         openSaveNewWidget = QWidget()
         openSaveNewWidget.setLayout(openSaveNewlayout)
         openSaveNewWidget.setFixedSize(236, 40)
@@ -276,6 +281,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.position_to_place)
         layout.addWidget(self.update_button)
         layout.addWidget(self.color_picker)
+        layout.addWidget(self.pix_scale)
 
         widget = QWidget()
         widget.setLayout(layout)

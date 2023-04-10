@@ -2,7 +2,7 @@ import json
 import os
 import shutil
 from random import randint
-from tkinter.messagebox import showerror
+# from tkinter.messagebox import showerror
 
 import glm
 import numpy as np
@@ -13,15 +13,13 @@ def clamp(num: 'int|float', min_value: 'int|float', max_value: 'int|float'):
     return max(min(num, max_value), min_value)
 
 
-
-
 class IDHandler:
     def __init__(self):
         self.path = f'{os.path.dirname(__file__)}\\images'
 
         if not os.path.exists(self.path):
-            showerror(title="Path Error!", message=f"Path \"{self.path}\" does not exist")
-            raise FileExistsError(f"Path \"{self.path}\" does not exist")
+            # showerror(title="Path Error!", message=f'Path "{self.path}" does not exist. Try to reinstall application.')
+            raise FileExistsError(f'Path "{self.path}" does not exist. Try to reinstall application.')
 
         self.folders = next(os.walk(self.path))[1]
         self.full = {}
@@ -65,16 +63,13 @@ class Block:
         return '' if l is None else l.get(param)
 
     @staticmethod
-    def matrix_pos_to_image_pos(pos: tuple[int, int, int]) -> tuple[int, int]:
-        x, y, z = pos
-        new_pos = glm.vec2(x * -8, x * 4)
-        new_pos += glm.vec2(y * 8, y * 4)
-        new_pos += glm.vec2(0, z * -8)
+    def matrix_pos_to_image_pos(pos: tuple[int, int, int], scale=16) -> tuple[int, int]:
+        new_pos = Block.matrix_pos_to_image_pos_glm(glm.vec3(pos), scale=scale)
         return int(new_pos.x), int(new_pos.y)
 
     @staticmethod
-    def matrix_pos_to_image_pos_glm(pos: glm.vec3) -> glm.vec2:
-        return glm.vec2((pos.y - pos.x) * 8, (pos.x + pos.y) * 4 + pos.z * -9)
+    def matrix_pos_to_image_pos_glm(pos: glm.vec3, scale=16) -> glm.vec2:
+        return glm.vec2((pos.y - pos.x) * scale / 2, (pos.x + pos.y) * scale / 4 + pos.z * -(scale / 2 + 1))
 
 
 def clear_render_folder(path: str):
@@ -184,24 +179,24 @@ class BlocksMatrix:
                 return self.get_brightness((x, y, i)) / 2
         return 0
 
-    def get_image_size(self) -> tuple[int, int]:
+    def get_image_size(self, scale=16) -> tuple[int, int]:
 
-        max_x00 = Block.matrix_pos_to_image_pos_glm(glm.vec3(self.maxx, 0, 0))
-        max_xy0 = Block.matrix_pos_to_image_pos_glm(glm.vec3(self.maxx, self.maxy, 0))
-        max_0xz = Block.matrix_pos_to_image_pos_glm(glm.vec3(0, self.maxy, self.maxz))
-        max_0y0 = Block.matrix_pos_to_image_pos_glm(glm.vec3(0, self.maxy, 0))
-        max_00z = Block.matrix_pos_to_image_pos_glm(glm.vec3(0, 0, self.maxz))
+        max_x00 = Block.matrix_pos_to_image_pos_glm(glm.vec3(self.maxx * scale / 16, 0, 0))
+        max_xy0 = Block.matrix_pos_to_image_pos_glm(glm.vec3(self.maxx * scale / 16, self.maxy * scale / 16, 0))
+        max_0xz = Block.matrix_pos_to_image_pos_glm(glm.vec3(0, self.maxy * scale / 16, self.maxz * scale / 16))
+        max_0y0 = Block.matrix_pos_to_image_pos_glm(glm.vec3(0, self.maxy * scale / 16, 0))
+        max_00z = Block.matrix_pos_to_image_pos_glm(glm.vec3(0, 0, self.maxz * scale / 16))
 
         return int((min(max_x00.x, max_xy0.x, max_0xz.x, max_0y0.x, max_00z.x)) * -2), \
-               int((max(max_x00.y, max_xy0.y, max_0xz.y, max_0y0.y, max_00z.y) + 4) * 2)
+               int((max(max_x00.y, max_xy0.y, max_0xz.y, max_0y0.y, max_00z.y) + scale/4) * 2)
 
     def clamped_get_from_blocksMatrix(self, x: int, y: int, z: int) -> str:
         return self.blocksMatrix[clamp(x, 0, self.maxx - 1), clamp(y, 0, self.maxy - 1), clamp(z, 0, self.maxz - 1)]
 
-    def render(self, save_frames=False, path=f'{os.path.dirname(__file__)}\\render', shadows=True):
+    def render(self, save_frames=False, path=f'{os.path.dirname(__file__)}\\render', shadows=True, scale=16):
         if save_frames:
             clear_render_folder(path)
-        im = Image.new("RGBA", self.get_image_size(), color=(0, 0, 0, 0))
+        im = Image.new("RGBA", self.get_image_size(scale=scale), color=(0, 0, 0, 0))
         pcs = 0
 
         for z in np.arange(self.maxz):
@@ -211,7 +206,7 @@ class BlocksMatrix:
                     if self.blocksMatrix[x, y, z]['id'] == "null":
                         continue
 
-                    pos = Block.matrix_pos_to_image_pos_glm(glm.vec3(x, y, z))
+                    pos = Block.matrix_pos_to_image_pos_glm(glm.vec3(x, y, z), scale=scale)
                     pos += glm.vec2(im.size[0] / 2 - 8, im.size[1] / 2 - 4)
 
                     topaste = Image.open(Block.get_param_from_id(self.blocksMatrix[x, y, z]['id']))
