@@ -55,7 +55,7 @@ class MainWindow(QMainWindow):
         #    bim_size[0],
         #    bim_size[1]
         # )
-        #self.render_label.setPixmap(self.rendered_image)
+        self.render_label.setPixmap(self.rendered_image)
         # self.render_label.setMaximumWidth(self.width()//4*3)
         self.setWindowTitle(f'{self.normalWindowTitle} - {self.path_to_saved}')
 
