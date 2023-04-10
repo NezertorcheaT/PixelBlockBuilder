@@ -1,6 +1,5 @@
 from PyQt6.QtWidgets import (
     QVBoxLayout,
-    QLabel,
     QDialog,
     QDialogButtonBox,
 )
@@ -16,10 +15,10 @@ border-color: gray;
 
 
 class CreateNewMatrixDialog(QDialog):
-    def __init__(self):
+    def __init__(self, title="Create New Matrix", message="Input for new size:"):
         super().__init__()
 
-        self.setWindowTitle("Create New Matrix")
+        self.setWindowTitle(title)
 
         QBtn = QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
 
@@ -28,8 +27,8 @@ class CreateNewMatrixDialog(QDialog):
         self.buttonBox.rejected.connect(self.reject)
 
         self.layout = QVBoxLayout()
-        message = QLabel("Select new size")
-        self.vec = Vec3Entry()
+        message = QLabel(message)
+        self.vec = VecEntry(3)
         self.vec.setValue((1, 1, 1))
         self.vec.setMinimum((1, 1, 1))
         self.layout.addWidget(message)

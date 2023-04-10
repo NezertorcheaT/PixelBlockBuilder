@@ -19,32 +19,30 @@ border-color: gray;
 with open(f'{os.path.dirname(__file__)}\\style.qss', 'r') as f:
     style = f.read()
 
-class Vec3Entry(QLabel):
+
+class VecEntry(QLabel):
     valueChanged = pyqtSignal()
 
     @pyqtSlot()
     def valueChangedSlot(status, source):
         pass
 
-    def __init__(self):
+    def __init__(self, size: int):
         super().__init__()
-        self.setStyleSheet(style+styleQl)
+        self.setStyleSheet(style + styleQl)
         self.lay = QHBoxLayout()
         self.setLayout(self.lay)
+        self.vec_size = size
 
-        self.__XEntry = QSpinBox()
-        self.__YEntry = QSpinBox()
-        self.__ZEntry = QSpinBox()
-        self.__textLabel = QLabel("Vec3:")
+        self.__Entries = [QSpinBox() for _ in range(self.vec_size)]
+        self.__textLabel = QLabel(f"Vec{self.vec_size}:")
 
-        self.__XEntry.valueChanged.connect(self.valueChanged.emit)
-        self.__YEntry.valueChanged.connect(self.valueChanged.emit)
-        self.__ZEntry.valueChanged.connect(self.valueChanged.emit)
+        for i in self.__Entries:
+            i.valueChanged.connect(self.valueChanged.emit)
 
         self.lay.addWidget(self.__textLabel)
-        self.lay.addWidget(self.__XEntry)
-        self.lay.addWidget(self.__YEntry)
-        self.lay.addWidget(self.__ZEntry)
+        for i in self.__Entries:
+            self.lay.addWidget(i)
 
         # self.setFixedSize(200, 40)
         self.setMinimumSize(200, 40)
@@ -55,48 +53,25 @@ class Vec3Entry(QLabel):
         )
 
     def get(self):
-        return self.__XEntry.value(), self.__YEntry.value(), self.__ZEntry.value()
+        return tuple(i.value() for i in self.__Entries)
 
-    def setMaximum(self, size: tuple[int, int, int]):
-        self.__XEntry.setMaximum(size[0])
-        self.__YEntry.setMaximum(size[1])
-        self.__ZEntry.setMaximum(size[2])
+    def setMaximum(self, size: tuple):
+        if len(size) < self.vec_size:
+            raise Exception(f"Length of inputted value {size} less than {self.vec_size}. ({len(size)}<{self.vec_size})")
+        for ind, i in enumerate(self.__Entries):
+            i.setMaximum(size[ind])
 
-    def setMinimum(self, size: tuple[int, int, int]):
-        self.__XEntry.setMinimum(size[0])
-        self.__YEntry.setMinimum(size[1])
-        self.__ZEntry.setMinimum(size[2])
+    def setMinimum(self, size: tuple):
+        if len(size) < self.vec_size:
+            raise Exception(f"Length of inputted value {size} less than {self.vec_size}. ({len(size)}<{self.vec_size})")
+        for ind, i in enumerate(self.__Entries):
+            i.setMinimum(size[ind])
 
-    def setValue(self, val: tuple[int, int, int]):
-        self.__XEntry.setValue(val[0])
-        self.__YEntry.setValue(val[1])
-        self.__ZEntry.setValue(val[2])
+    def setValue(self, val: tuple):
+        if len(val) < self.vec_size:
+            raise Exception(f"Length of inputted value {val} less than {self.vec_size}. ({len(val)}<{self.vec_size})")
+        for ind, i in enumerate(self.__Entries):
+            i.setValue(val[ind])
 
     def setText(self, a0: str):
         self.__textLabel.setText(a0)
-
-
-class Vec4Entry(Vec3Entry):
-    def __init__(self):
-        super().__init__()
-        self.__WEntry = QSpinBox()
-        self.__WEntry.valueChanged.connect(self.valueChanged.emit)
-
-        self.lay.addWidget(self.__WEntry)
-
-        self.setText('Vec4: ')
-
-    def get(self):
-        return super(Vec4Entry, self).get() + (self.__WEntry.value())
-
-    def setMaximum(self, size: tuple[int, int, int, int]):
-        super(Vec4Entry, self).setMaximum(size)
-        self.__WEntry.setMaximum(size[3])
-
-    def setMinimum(self, size: tuple[int, int, int, int]):
-        super(Vec4Entry, self).setMinimum(size)
-        self.__WEntry.setMinimum(size[3])
-
-    def setValue(self, val: tuple[int, int, int, int]):
-        super(Vec4Entry, self).setValue(val)
-        self.__WEntry.setValue(val[2])

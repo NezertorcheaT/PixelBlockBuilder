@@ -1,12 +1,15 @@
 import json
 import os
 import shutil
+from dataclasses import dataclass
 from random import randint
-# from tkinter.messagebox import showerror
 
 import glm
 import numpy as np
 from PIL import Image
+
+
+# from tkinter.messagebox import showerror
 
 
 def clamp(num: 'int|float', min_value: 'int|float', max_value: 'int|float'):
@@ -89,6 +92,7 @@ def clear_render_folder(path: str):
 
 class BlocksMatrix:
     def __init__(self, path: str = "", size: "tuple[int,int,int] | list[int,int,int]" = None):
+        self.blocksMatrix: np.array
         if path == "":
             if size is None:
                 self.blocksMatrix: np.array = np.full((5, 5, 5), {'id': 'null', 'color': (255, 255, 255, 255)})
@@ -131,14 +135,14 @@ class BlocksMatrix:
                 self.blocksMatrix = np.array(d).reshape((self.maxx, self.maxy, self.maxz))
         self.size = (self.maxx, self.maxy, self.maxz)
 
-    def topbn(self):
-        st: str = f'{self.maxx},{self.maxy},{self.maxz}\n'
-        for x in np.arange(self.maxx):
-            for y in np.arange(self.maxy):
-                for z in np.arange(self.maxz):
-                    print(self.blocksMatrix[x, y, z]["color"])
-                    st += f'{self.blocksMatrix[x, y, z]["id"]};{self.blocksMatrix[x, y, z]["color"][0]},{self.blocksMatrix[x, y, z]["color"][1]},{self.blocksMatrix[x, y, z]["color"][2]},{self.blocksMatrix[x, y, z]["color"][3]}\n'
-        return st[:-1]
+    @dataclass
+    class ManipulationAxis:
+        X_rotation = (1, 2)
+        Y_rotation = (0, 2)
+        Z_rotation = (0, 1)
+        X_flip = 0
+        Y_flip = 1
+        Z_flip = 2
 
     @staticmethod
     def random_matrix(size: "tuple[int,int,int] | list[int,int,int]"):
@@ -151,6 +155,29 @@ class BlocksMatrix:
                         n = f"images\\{n}"
                     bm.blocksMatrix[x, y, z] = n
         return bm
+
+    def topbn(self):
+        st: str = f'{self.maxx},{self.maxy},{self.maxz}\n'
+        for x in np.arange(self.maxx):
+            for y in np.arange(self.maxy):
+                for z in np.arange(self.maxz):
+                    st += f'{self.blocksMatrix[x, y, z]["id"]};{self.blocksMatrix[x, y, z]["color"][0]},{self.blocksMatrix[x, y, z]["color"][1]},{self.blocksMatrix[x, y, z]["color"][2]},{self.blocksMatrix[x, y, z]["color"][3]}\n'
+        return st[:-1]
+
+    def rotate_by_ManipulationAxis(self, axis: tuple[int, int]):
+        self.blocksMatrix = np.rot90(self.blocksMatrix, 1, axis)
+
+    def flip_by_ManipulationAxis(self, axis: tuple[int, int]):
+        self.blocksMatrix = np.flip(self.blocksMatrix, axis)
+
+    def crop(self, size: tuple[int, int, int]):
+        self.blocksMatrix = self.blocksMatrix[0:size[0], 0:size[1], 0:size[2]]
+        self.maxx, self.maxy, self.maxz = size
+        self.size = size
+
+    def expand(self, size: tuple[int, int, int]):
+        self.blocksMatrix = np.pad(self.blocksMatrix, ((0, 0, 0), size), mode='constant',
+                                   constant_values={'id': 'null', 'color': (255, 255, 255, 255)})
 
     def place(self, block: Block, pos: tuple[int, int, int], color=(255, 255, 255, 255)):
         if block.ID in idsHandler.all_ids:
@@ -188,7 +215,7 @@ class BlocksMatrix:
         max_00z = Block.matrix_pos_to_image_pos_glm(glm.vec3(0, 0, self.maxz * scale / 16))
 
         return int((min(max_x00.x, max_xy0.x, max_0xz.x, max_0y0.x, max_00z.x)) * -2), \
-               int((max(max_x00.y, max_xy0.y, max_0xz.y, max_0y0.y, max_00z.y) + scale/4) * 2)
+               int((max(max_x00.y, max_xy0.y, max_0xz.y, max_0y0.y, max_00z.y) + scale / 4) * 2)
 
     def clamped_get_from_blocksMatrix(self, x: int, y: int, z: int) -> str:
         return self.blocksMatrix[clamp(x, 0, self.maxx - 1), clamp(y, 0, self.maxy - 1), clamp(z, 0, self.maxz - 1)]
@@ -211,6 +238,8 @@ class BlocksMatrix:
 
                     topaste = Image.open(Block.get_param_from_id(self.blocksMatrix[x, y, z]['id']))
                     topaste = topaste.convert('RGBA')
+                    if (topaste.width + topaste.height) / 2 < scale:
+                        topaste = topaste.resize((scale, scale), Image.NEAREST)
                     datas = topaste.getdata()
 
                     newData = []
@@ -239,4 +268,4 @@ class BlocksMatrix:
 
         return im
 
-# print(BlocksMatrix('C:/Users/tigri/PycharmProjects/PixelBlockBuilder/PixelBlockBuilder/examples/box.pbn').blocksMatrix)
+# print(BlocksMatrix('C:/Users/tigri/PycharmProjects/PixelBlockBuilder/PixelBlockBuilder/examples/box.pbn').ManipulationAxis.X)
