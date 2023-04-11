@@ -22,7 +22,7 @@ from QtNewMatrixDialog import *
 
 class MainWindow(QMainWindow):
     def update_image(self):
-        self.bim = self.blocksMatrix.render(shadows=self.shadows.isChecked(), scale=self.pix_scale.value())
+        self.bim = self.blocksMatrix.render(shadows=self.shadows.isChecked())
         bim_size = self.bim.size
         # self.data_layout_widget.setMaximumWidth(self.width()//4)
 
@@ -39,15 +39,15 @@ class MainWindow(QMainWindow):
             f"Size: ({self.blocksMatrix.maxx}, {self.blocksMatrix.maxy}, {self.blocksMatrix.maxz})")
 
         self.axis_matrix = PBB.BlocksMatrix("", self.blocksMatrix.size)
+        self.axis_matrix.set_pix_size(self.pix_scale.value())
         self.axis_matrix.place_id("selector", self.position_to_place.get())
 
         if self.show_cursor.isChecked():
-            self.bim.alpha_composite(self.axis_matrix.render(shadows=False, scale=self.pix_scale.value()))
+            self.bim.alpha_composite(self.axis_matrix.render(shadows=False))
+            print(self.axis_matrix.pix_size)
 
         bim = self.bim.resize((int(bim_size[0] * self.image_size_slider.value()),
-                          int(bim_size[1] * self.image_size_slider.value())), Image.NEAREST)
-
-        self.render_painter=QPainter()
+                               int(bim_size[1] * self.image_size_slider.value())), Image.NEAREST)
 
         im = ImageQt(bim)
         self.rendered_image = QPixmap.fromImage(im)
@@ -60,10 +60,9 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f'{self.normalWindowTitle} - {self.path_to_saved}')
 
     def paintEvent(self, a0: QPaintEvent) -> None:
-        p=QPainter()
-        p.drawPixmap(QPoint(0,0),self.rendered_image.scaled(int(self.bim.size[0] * self.image_size_slider.value()),
-                          int(self.bim.size[1] * self.image_size_slider.value())))
-
+        p = QPainter()
+        p.drawPixmap(QPoint(0, 0), self.rendered_image.scaled(int(self.bim.size[0] * self.image_size_slider.value()),
+                                                              int(self.bim.size[1] * self.image_size_slider.value())))
 
     def place_block(self):
         ID = self.id_selector.currentText()
@@ -145,6 +144,7 @@ class MainWindow(QMainWindow):
 
         if marixDialog.exec():
             self.blocksMatrix.crop(marixDialog.vec.get())
+            self.axis_matrix.crop(marixDialog.vec.get())
 
     def expand_matrix(self):
         marixDialog = CreateNewMatrixDialog('Expand Matrix')
@@ -153,6 +153,7 @@ class MainWindow(QMainWindow):
 
         if marixDialog.exec():
             self.blocksMatrix.expand(marixDialog.vec.get())
+            self.axis_matrix.expand(marixDialog.vec.get())
 
     def rotation_changed(self, s):
         if PBB.idsHandler.full[s].get("variants", None):
@@ -167,7 +168,7 @@ class MainWindow(QMainWindow):
             return
 
         try:
-            self.blocksMatrix.render(True, filename, shadows=self.shadows.isChecked(), scale=self.pix_scale.value())
+            self.blocksMatrix.render(True, filename, shadows=self.shadows.isChecked())
         except Exception as e:
             QMessageBox.critical(
                 self,
@@ -206,7 +207,7 @@ class MainWindow(QMainWindow):
         data_layout = QVBoxLayout()
         self.data_layout_widget = QWidget()
         self.data_layout_widget.setLayout(data_layout)
-        self.data_layout_widget.setMaximumWidth(self.width() // 4)
+        self.data_layout_widget.setMaximumWidth(self.width() // 3)
 
         self.blocksMatrix = PBB.BlocksMatrix("", (5, 5, 5))
         self.blocksMatrix.place_id("pbb.box", (0, 0, 0))
@@ -344,6 +345,7 @@ class MainWindow(QMainWindow):
 
         self.pix_scale = QSpinBox()
         self.pix_scale.setMinimum(16)
+        self.pix_scale.valueChanged.connect(lambda: self.blocksMatrix.set_pix_size(self.pix_scale.value()))
         self.pix_scale.valueChanged.connect(self.update_image)
 
         layout.addWidget(self.render_label)

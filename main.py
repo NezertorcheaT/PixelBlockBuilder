@@ -71,8 +71,17 @@ class Block:
         return int(new_pos.x), int(new_pos.y)
 
     @staticmethod
-    def matrix_pos_to_image_pos_glm(pos: glm.vec3, scale=16) -> glm.vec2:
-        return glm.vec2((pos.y - pos.x) * scale / 2, (pos.x + pos.y) * scale / 4 + pos.z * -(scale / 2 + 1))
+    def matrix_pos_to_image_pos_glm(pos: glm.vec3):
+        posa = np.array(pos.to_list())
+
+        return glm.vec2(glm.vec3(np.array([
+            [-0.5, 0.5, 0],
+            [0.25, 0.25, -0.5],
+            [0, 0, 0]
+        ]).dot(posa)))  # , glm.vec3((pos.y - pos.x) / 2, (pos.x + pos.y) / 4 + pos.z * -((1 / 2) + 1), 0)
+
+
+print(Block.matrix_pos_to_image_pos_glm(glm.vec3(1, 1, 1)))
 
 
 def clear_render_folder(path: str):
@@ -93,6 +102,7 @@ def clear_render_folder(path: str):
 class BlocksMatrix:
     def __init__(self, path: str = "", size: "tuple[int,int,int] | list[int,int,int]" = None):
         self.blocksMatrix: np.array
+        self.pix_size = 16
         if path == "":
             if size is None:
                 self.blocksMatrix: np.array = np.full((5, 5, 5), {'id': 'null', 'color': (255, 255, 255, 255)})
@@ -134,6 +144,9 @@ class BlocksMatrix:
 
                 self.blocksMatrix = np.array(d).reshape((self.maxx, self.maxy, self.maxz))
         self.size = (self.maxx, self.maxy, self.maxz)
+
+    def set_pix_size(self, value: int):
+        self.pix_size = max(16, value)
 
     @dataclass
     class ManipulationAxis:
@@ -206,24 +219,26 @@ class BlocksMatrix:
                 return self.get_brightness((x, y, i)) / 2
         return 0
 
-    def get_image_size(self, scale=16) -> tuple[int, int]:
+    def get_image_size(self) -> tuple[int, int]:
 
-        max_x00 = Block.matrix_pos_to_image_pos_glm(glm.vec3(self.maxx * scale / 16, 0, 0))
-        max_xy0 = Block.matrix_pos_to_image_pos_glm(glm.vec3(self.maxx * scale / 16, self.maxy * scale / 16, 0))
-        max_0xz = Block.matrix_pos_to_image_pos_glm(glm.vec3(0, self.maxy * scale / 16, self.maxz * scale / 16))
-        max_0y0 = Block.matrix_pos_to_image_pos_glm(glm.vec3(0, self.maxy * scale / 16, 0))
-        max_00z = Block.matrix_pos_to_image_pos_glm(glm.vec3(0, 0, self.maxz * scale / 16))
+        max_x00 = Block.matrix_pos_to_image_pos_glm(glm.vec3(self.maxx, 0, 0))*self.pix_size
+        max_xy0 = Block.matrix_pos_to_image_pos_glm(
+            glm.vec3(self.maxx, self.maxy, 0))*self.pix_size
+        max_0xz = Block.matrix_pos_to_image_pos_glm(
+            glm.vec3(0, self.maxy, self.maxz))*self.pix_size
+        max_0y0 = Block.matrix_pos_to_image_pos_glm(glm.vec3(0, self.maxy, 0))*self.pix_size
+        max_00z = Block.matrix_pos_to_image_pos_glm(glm.vec3(0, 0, self.maxz))*self.pix_size
 
         return int((min(max_x00.x, max_xy0.x, max_0xz.x, max_0y0.x, max_00z.x)) * -2), \
-               int((max(max_x00.y, max_xy0.y, max_0xz.y, max_0y0.y, max_00z.y) + scale / 4) * 2)
+               int((max(max_x00.y, max_xy0.y, max_0xz.y, max_0y0.y, max_00z.y) + self.pix_size / 4) * 2)
 
     def clamped_get_from_blocksMatrix(self, x: int, y: int, z: int) -> str:
         return self.blocksMatrix[clamp(x, 0, self.maxx - 1), clamp(y, 0, self.maxy - 1), clamp(z, 0, self.maxz - 1)]
 
-    def render(self, save_frames=False, path=f'{os.path.dirname(__file__)}\\render', shadows=True, scale=16):
+    def render(self, save_frames=False, path=f'{os.path.dirname(__file__)}\\render', shadows=True):
         if save_frames:
             clear_render_folder(path)
-        im = Image.new("RGBA", self.get_image_size(scale=scale), color=(0, 0, 0, 0))
+        im = Image.new("RGBA", self.get_image_size(), color=(0, 0, 0, 0))
         pcs = 0
 
         for z in np.arange(self.maxz):
@@ -233,13 +248,12 @@ class BlocksMatrix:
                     if self.blocksMatrix[x, y, z]['id'] == "null":
                         continue
 
-                    pos = Block.matrix_pos_to_image_pos_glm(glm.vec3(x, y, z), scale=scale)
-                    pos += glm.vec2(im.size[0] / 2 - 8, im.size[1] / 2 - 4)
+                    pos = Block.matrix_pos_to_image_pos_glm(glm.vec3(x, y, z)) * self.pix_size
+                    pos += glm.vec2(im.size[0] / 2 - self.pix_size/2, im.size[1] / 2 - self.pix_size/4)
 
                     topaste = Image.open(Block.get_param_from_id(self.blocksMatrix[x, y, z]['id']))
                     topaste = topaste.convert('RGBA')
-                    if (topaste.width + topaste.height) / 2 < scale:
-                        topaste = topaste.resize((scale, scale), Image.NEAREST)
+                    topaste = topaste.resize((self.pix_size, self.pix_size), Image.NEAREST)
                     datas = topaste.getdata()
 
                     newData = []
